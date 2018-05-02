@@ -1,74 +1,145 @@
 <template>
-  <div class="hello">
-    <h1>{{ msg }}</h1>
-    <h2>Essential Links</h2>
-    <ul>
-      <li>
-        <a href="https://vuejs.org" target="_blank">
-          Core Docs
-        </a>
-      </li>
-      <li>
-        <a href="https://forum.vuejs.org" target="_blank">
-          Forum
-        </a>
-      </li>
-      <li>
-        <a href="https://chat.vuejs.org" target="_blank">
-          Community Chat
-        </a>
-      </li>
-      <li>
-        <a href="https://twitter.com/vuejs" target="_blank">
-          Twitter
-        </a>
-      </li>
-      <br>
-      <li>
-        <a href="http://vuejs-templates.github.io/webpack/" target="_blank">
-          Docs for This Template
-        </a>
-      </li>
-    </ul>
-    <h2>Ecosystem</h2>
-    <ul>
-      <li>
-        <a href="http://router.vuejs.org/" target="_blank">
-          vue-router
-        </a>
-      </li>
-      <li>
-        <a href="http://vuex.vuejs.org/" target="_blank">
-          vuex
-        </a>
-      </li>
-      <li>
-        <a href="http://vue-loader.vuejs.org/" target="_blank">
-          vue-loader
-        </a>
-      </li>
-      <li>
-        <a href="https://github.com/vuejs/awesome-vue" target="_blank">
-          awesome-vue
-        </a>
-      </li>
-    </ul>
+  <div>
+    <nav class="navbar">
+      <div class="container">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <a class="navbar-brand" href="/">
+            <img class="nav-image" src="../assets/combined-shape.png" alt="">
+          </a>
+        </div>
+      </div>
+      <!-- /.container -->
+      <p class="pull-right" id="sharereason" @click="shareReason">Got a creative reason ? Share with us !</p>
+    </nav>
+
+    <div class="container">
+      <section>
+        <div class="row">
+          <div class="col-md-2 col-sm-2 col-xs-12"></div>
+          <div class="col-md-8 col-sm-8 col-xs-12">
+            <div class="reason_container">
+              <p id="reason" class="reason">
+                {{ reason }}
+              </p>
+            </div>
+            <p class="click_to_copy dark_font" @click="clickToCopy">Click to copy it to the clipboard.</p>
+            <button class="main-reason__btn" :style="{color: currentColor}" @click="generateNext">Show me another reason</button>
+          </div>
+          <div class="col-md-2 col-sm-2 col-xs-12"></div>
+        </div>
+      </section>
+      <!-- Reason End-->
+      <div class="row coming_soon">
+        <p class="dark_font">Coming Soon On</p>
+        <div class="app_download_container">
+          <img class="app_download" src="../assets/play-store.svg" alt="">
+          <img class="app_download" src="../assets/app-store.svg" alt="">
+        </div>
+      </div>
+      <footer>
+        <div class="row">
+          <div class="col-md-12 col-sm-12 col-xs-12">
+            <div class="main-social__container">
+              <p class="visible-xs">Got a creative reason ? Share with us !</p>
+              <p>Ssssh !! Share it only with your close friends.</p>
+              <ul class="social_container">
+                <li>
+                  <a href="https://www.facebook.com/sharer/sharer.php?u=https://idontlike.work/">
+                    <span class="fab fa fa-facebook fa-2x"></span>
+                  </a>
+                </li>
+                <li>
+                  <a href="http://www.twitter.com/share?url=google.com&text=Work+From+Home+Reason+Generator">
+                    <span class="fab fa fa-twitter fa-2x"></span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
   </div>
 </template>
 
 <script>
+import { shuffle } from '../utils';
+import axios from 'axios';
 export default {
   name: 'HelloWorld',
   data() {
     return {
-      msg: 'Welcome to Your Vue.js App'
+      reason: "Got some pain in leg. Won't be able to walk to the office.",
+      msg: 'Welcome to Your Vue.js App',
+      colorList: [
+        '#ffab40',
+        '#db504a',
+        '#40A379',
+        '#F4555D',
+        '#3A7290',
+        '#795548',
+        '#607D8B',
+        '#9CCC65',
+        '#78586F'
+      ],
+      currentReasonIndex: 0,
+      currentColorIndex: 0,
+      reasons: [],
+      currentColor: '#209DA3'
     };
+  },
+  methods: {
+    shareReason: function() {
+      window.open(
+        'https://docs.google.com/forms/d/e/1FAIpQLSdhkzp_cKi2lL_jSFrQ1TlTK_6LlE8APTdRbYt9yZrljkHsqA/viewform',
+        '_blank'
+      );
+    },
+    clickToCopy: function() {
+      var text = $('.reason')[0].innerText;
+      var $temp = $('<input>');
+      $('body').append($temp);
+      $temp.val(text).select();
+      document.execCommand('copy');
+      $temp.remove();
+    },
+
+    generateNext: function() {
+      const randomText = this.reasons[this.currentReasonIndex].text;
+      this.currentReasonIndex += 1;
+      if (this.currentReasonIndex === this.reasons.length) {
+        // displayed all messages done screen.
+        currentReasonIndex = 0;
+      }
+      this.currentColorIndex += 1;
+      if (this.currentColorIndex === this.colorList.length) {
+        this.currentColorIndex = 0;
+      }
+      this.reason = randomText;
+      this.currentColor = this.colorList[this.currentColorIndex];
+      document.getElementsByTagName(
+        'body'
+      )[0].style.backgroundColor = this.currentColor;
+    },
+
+    init: async function init() {
+      this.colorList = shuffle(this.colorList);
+      const axiosResp = await axios.get(
+        'https://s3.ap-south-1.amazonaws.com/idontlikework/wfh-reasons.json'
+      );
+      this.reasons = shuffle(axiosResp.data);
+      this.generateNext();
+    }
+  },
+  mounted() {
+    this.init();
   }
 };
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
+<style>
 @import url('https://fonts.googleapis.com/css?family=Montserrat');
 
 body {
